@@ -1,0 +1,32 @@
+{
+  "name": "fresh-validation",
+  "version": "1.0.0",
+  "description": "chainable validation to ensure those inputs are fresh",
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/elliothatch/fresh-validation.git"
+  },
+  "keywords": [
+    "validate",
+    "validator",
+    "validation"
+  ],
+  "author": "Elliot Hatch",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/elliothatch/fresh-validation/issues"
+  },
+  "homepage": "https://github.com/elliothatch/fresh-validation",
+  "devDependencies": {
+    "blanket": "~1.1.7",
+    "chai": "^3.0.0",
+    "grunt": "~0.4.5",
+    "grunt-contrib-jshint": "~0.11.2",
+    "grunt-jsdoc": "~0.6.7",
+    "grunt-mocha-test": "~0.12.7",
+    "mocha": "~2.2.5"
+  }
+}
