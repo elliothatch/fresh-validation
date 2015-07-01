@@ -15,10 +15,18 @@ module.exports = function (grunt) {
 			},
 			coverage: {
 				options: {
-					reporter: 'spec',
+					reporter: 'html-cov',
+					quiet: true,
+					captureFile: 'logs/coverage.html'
 				},
 				src: ['test/**/*.js']
-			}
+			},
+			'travis-cov': {
+				options: {
+					reporter: 'travis-cov'
+				},
+				src: ['test/**/*.js']
+			},
 		},
 
 		jsdoc: {
