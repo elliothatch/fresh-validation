@@ -50,6 +50,68 @@ describe('Validator', function() {
 			 expect(validator.errors).to.be.empty;
 		});
 	});
+
+	describe('or', function() {
+		it('should have no errors if any value in the expression is valid', function() {
+			var validator1 = new Validator();
+			validator1.is('a').equalTo('a').or.equalTo('b').or.equalTo('c');
+			expect(validator1.errors).to.be.empty;
+		
+			var validator2 = new Validator();
+			validator2.is('b').equalTo('a').or.equalTo('b').or.equalTo('c');
+			expect(validator2.errors).to.be.empty;
+		
+			var validator3 = new Validator();
+			validator3.is('c').equalTo('a').or.equalTo('b').or.equalTo('c');
+			expect(validator3.errors).to.be.empty;
+
+			var validator4 = new Validator();
+			validator4.is('a').equalTo('a').or.equalTo('a').or.equalTo('c');
+			expect(validator4.errors).to.be.empty;
+
+			var validator5 = new Validator();
+			validator5.is('a').equalTo('a').or.equalTo('b').or.equalTo('a');
+			expect(validator5.errors).to.be.empty;
+
+			var validator6 = new Validator();
+			validator6.is('a').equalTo('b').or.equalTo('a').or.equalTo('a');
+			expect(validator6.errors).to.be.empty;
+
+			var validator7 = new Validator();
+			validator7.is('a').equalTo('a').or.equalTo('a').or.equalTo('a');
+			expect(validator7.errors).to.be.empty;
+		});
+
+		it('should work with complex validations', function() {
+			var validator = new Validator();
+			validator.is('b').string().equalTo('a').or.equalTo('b').or.not.equalTo('c').not.number();
+			expect(validator.errors).to.be.empty;
+		});
+
+		it('should have one error if no values are valid', function() {
+			var validator = new Validator();
+			validator.is('z').equalTo('a').or.equalTo('b').or.equalTo('c');
+			expect(validator.errors).to.have.length(1);
+		});
+
+		it('should report errors correctly in complex validations', function() {
+			var validator1 = new Validator();
+			validator1.is('a').equalTo('y').equalTo('x').equalTo('a').or.equalTo('b').or.equalTo('c').equalTo('w').equalTo('v').equalTo(1).or.equalTo(2);
+			expect(validator1.errors).to.have.length(5);
+
+			var validator2 = new Validator();
+			validator2.is('b').equalTo('y').equalTo('x').equalTo('a').or.equalTo('b').or.equalTo('c').equalTo('w').equalTo('v').equalTo(1).or.equalTo(2);
+			expect(validator2.errors).to.have.length(5);
+
+			var validator3 = new Validator();
+			validator3.is('c').equalTo('y').equalTo('x').equalTo('a').or.equalTo('b').or.equalTo('c').equalTo('w').equalTo('v').equalTo(1).or.equalTo(2);
+			expect(validator3.errors).to.have.length(5);
+
+			var validator4 = new Validator();
+			validator4.is('z').equalTo('y').equalTo('x').equalTo('a').or.equalTo('b').or.equalTo('c').equalTo('w').equalTo('v');
+			expect(validator4.errors).to.have.length(5);
+		});
+	});
 	
 	describe('required', function() {
 		it('should run validators when the value is defined', function() {
