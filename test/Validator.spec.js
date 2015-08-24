@@ -229,7 +229,7 @@ describe('Validator', function() {
 				expect(equalToValidator.validationFunction.callCount).to.equal(0);
 		});
 			
-		it('should validate properties on values that cannot have properties as undefined', function() {
+		it('should validate properties as undefined on values that cannot have properties', function() {
 			var validator = new Validator();
 			validator
 				.is(1).property('a').equalTo(undefined)
@@ -238,6 +238,29 @@ describe('Validator', function() {
 				.is(undefined).property('a').equalTo(undefined);
 				
 				expect(validator.errors).to.be.empty;
+		});
+	});
+
+	describe('errors', function() {
+		
+	});
+	
+	describe('addValidator', function() {
+		beforeEach(function() {
+			this.halfOfValidator = {
+				name: 'halfOf',
+				continueOnFail: true,
+				errorMessage: '{name} {val} {1}',
+				validationFunction: function(target, other) {
+					return target === other / 2;
+				}
+			};
+		});
+		it('should add the validator', function() {
+			var validator = new Validator();
+			validator.addValidator(this.halfOfValidator);
+			validator.is(8).halfOf(16);
+			expect(validator.errors).to.be.empty;
 		});
 	});
 
