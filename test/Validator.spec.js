@@ -111,6 +111,45 @@ describe('Validator', function() {
 			validator4.is('z').equalTo('y').equalTo('x').equalTo('a').or.equalTo('b').or.equalTo('c').equalTo('w').equalTo('v');
 			expect(validator4.errors).to.have.length(5);
 		});
+
+		it('should work with required', function() {
+			var validator1 = new Validator();
+			validator1.is('a').required().or.equalTo('b').or.equalTo('c');
+			expect(validator1.errors).to.be.empty;
+		
+			var validator2 = new Validator();
+			validator2.is('b').equalTo('a').or.required().or.equalTo('c');
+			expect(validator2.errors).to.be.empty;
+		
+			var validator3 = new Validator();
+			validator3.is('c').equalTo('a').or.equalTo('b').or.required();
+			expect(validator3.errors).to.be.empty;
+
+			var validator4 = new Validator();
+			validator4.is(null).required().or.equalTo(null);
+			expect(validator4.errors).to.be.empty;
+
+			var validator5 = new Validator();
+			validator5.is(null).equalTo('a').or.required().or.equalTo(null);
+			expect(validator5.errors).to.be.empty;
+
+			var validator6 = new Validator();
+			validator5.is(null).equalTo(null).or.required().or.equalTo('b');
+			expect(validator6.errors).to.be.empty;
+
+			var validator7 = new Validator();
+			validator7.is(null).required().or.not.required();
+			validator7.is('a').required().or.not.required();
+			expect(validator7.errors).to.be.empty;
+
+			var validator8 = new Validator();
+			validator8.is(null).required().or.equalTo('a').or.equalTo('b');
+			expect(validator8.errors).to.have.length(1);
+
+			var validator9 = new Validator();
+			validator9.is(null).equalTo('a').or.required().or.equalTo('b');
+			expect(validator9.errors).to.have.length(1);
+		});
 	});
 	
 	describe('required', function() {
