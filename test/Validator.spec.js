@@ -228,7 +228,7 @@ describe('Validator', function() {
 			validator.is(obj)
 				.property('a').equalTo(1).back()
 				.property('b').equalTo(2).back()
-				.property('c').equalTo(cObj)
+				.property('c').deepEqualTo(cObj)
 					.property('c1').equalTo('hi')
 						.property('length').equalTo(2).back()
 					.back()
@@ -239,14 +239,14 @@ describe('Validator', function() {
 						.back()
 					.back()
 				.back()
-				.property('d').equalTo(dObj)
+				.property('d').deepEqualTo(dObj)
 					.property('d1').equalTo('hi2').back()
 					.property('d2')
 						.property('d2a').equalTo('hello2').back()
 						.property('d2b')
 							.property('length').equalTo(6);
 							
-			expect(validator.errors).to.be.empty;							
+			expect(validator.errors).to.be.empty;
 		});
 		
 		it('should error if a property fails validation', function() {
@@ -342,6 +342,54 @@ describe('Validator', function() {
 		});
 	});
 
+	describe('transformation', function() {
+		beforeEach(function() {
+			this.input = {
+				numStr: '5.2',
+				obj: {
+					a: '{"b":2}'
+				}
+			};
+		});
+
+		it('should make a copy in copy mode', function() {
+			var validator = new Validator();
+			validator.transformationMode = 'copy';
+			validator.is(this.input)
+				.property('numStr').number().equalTo(5.2).back()
+				.property('obj').property('a').object().deepEqualTo({b:2});
+
+			expect(validator.errors).to.be.empty;
+			var output = validator.transformationOutput();
+			expect(output).to.not.equal(this.input);
+			expect(output).to.deep.equal({ numStr: 5.2, obj: {a:{b:2}} });
+		});
+
+		it('should mutate the object in mutate mode', function() {
+			var validator = new Validator();
+			validator.transformationMode = 'mutate';
+			validator.is(this.input)
+				.property('numStr').number().equalTo(5.2).back()
+				.property('obj').property('a').object().deepEqualTo({b:2});
+
+			expect(validator.errors).to.be.empty;
+			var output = validator.transformationOutput();
+			expect(output).to.equal(this.input);
+			expect(this.input).to.deep.equal({ numStr: 5.2, obj: {a:{b:2}} });
+		});
+
+		it('should not perform transformations in \'none\' mode', function() {
+			var validator = new Validator();
+			validator.transformationMode = 'none';
+			validator.is(this.input)
+				.property('numStr').number().equalTo('5.2').back()
+				.property('obj').property('a').object().deepEqualTo('{"b":2}');
+
+			expect(validator.errors).to.be.empty;
+			var output = validator.transformationOutput();
+			expect(output).to.deep.equal({ numStr: '5.2', obj: {a:'{"b":2}'} });
+		});
+	});
 	describe('errors', function() {
 		
 	});
@@ -367,10 +415,13 @@ describe('Validator', function() {
 
 	describe('standard validator functions', function() {
 		
-		function testInputs(validator, inputs) {
+		function testInputs(validator, func, inputs) {
+			var outputs = [];
 			for(var i = 0; i < inputs.length; i++) {
-					validator.is(inputs[i]).number();
+					validator.is(inputs[i])[func]();
+					outputs.push(validator.transformationOutput());
 			}
+			return outputs;
 		}
 		describe('required', function() {
 			it('should be valid for basic types', function() {
@@ -426,7 +477,7 @@ describe('Validator', function() {
 					"123e-2"
 				];
 				var validator = new Validator();
-				testInputs(validator, inputs);
+				testInputs(validator, 'number', inputs);
 				
 				expect(validator.errors).to.be.empty;
 			});
@@ -453,9 +504,38 @@ describe('Validator', function() {
 					function(){}
 				];
 				var validator = new Validator();
-				testInputs(validator, inputs);
+				testInputs(validator, 'number', inputs);
 				
 				expect(validator.errors).to.have.length(inputs.length);
+			});
+			it('should transform strings into numbers', function() {
+				// NOTE: octal notation is not supported in ES5, so 040 is cast to 40, not 32
+				// This is intended behavior.
+				var inputs = [
+					"-10",
+					"0",
+					"5",
+					//"040",
+					"0xFF",
+					"-1.6",
+					"4.536",
+					"123e-2"
+				];
+				var outputs = [
+					-10,
+					0,
+					5,
+					//040,
+					0xFF,
+					-1.6,
+					4.536,
+					123e-2
+				];
+				var validator = new Validator();
+				var outs = testInputs(validator, 'number', inputs);
+
+				expect(outs).to.deep.equal(outputs);
+				expect(validator.errors).to.be.empty;
 			});
 		});
 	});
