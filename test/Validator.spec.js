@@ -6,6 +6,7 @@ var sandbox;
 
 var Validator = require('../lib').Validator;
 var StandardValidators = require('../lib/StandardValidators').validators;
+var Errors = require('../lib/Errors');
 
 function getStandardValidatorByName(name) {
 	for(var i = 0; i < StandardValidators.length; i++) {
@@ -391,7 +392,22 @@ describe('Validator', function() {
 		});
 	});
 	describe('errors', function() {
-		
+		describe('InvalidValidatorError', function() {
+			it('should be thrown when an invalid validator is passed to addValiator', function() {
+				var validator = new Validator();
+				expect(function() { validator.addValidator(5); }).to.throw(Errors.InvalidValidatorError);
+				expect(function() { validator.addValidator('a'); }).to.throw(Errors.InvalidValidatorError);
+				expect(function() { validator.addValidator([]); }).to.throw(Errors.InvalidValidatorError);
+				expect(function() { validator.addValidator({}); }).to.throw(Errors.InvalidValidatorError);
+			});
+		});
+		describe('InvalidTransformationModeError', function() {
+			it('should be thrown when the transformation mode is invalid', function() {
+				var validator = new Validator();
+				validator.transformationMode = 'bad mode';
+				expect(function() { validator.is('a').equalTo('a'); }).to.throw(Errors.InvalidTransformationModeError);
+			});
+		});
 	});
 	
 	describe('addValidator', function() {
@@ -425,11 +441,14 @@ describe('Validator', function() {
 		}
 		describe('required', function() {
 			it('should be valid for basic types', function() {
+				var inputs = [
+					1,
+					'a',
+					[],
+					{a: 'b'}
+			];
 				var validator = new Validator();
-				validator.is(1).required()
-					.is('a').required()
-					.is([]).required()
-					.is({a: 'b'}).required();
+				testInputs(validator, 'required', inputs);
 				expect(validator.errors).to.be.empty;
 			});
 			
@@ -441,6 +460,28 @@ describe('Validator', function() {
 				expect(validator.errors).to.have.length(3);
 			});
 		});
+		describe('defined', function() {
+			it('should be valid for basic types', function() {
+				var inputs = [
+					1,
+					'a',
+					[],
+					{a: 'b'}
+			];
+				var validator = new Validator();
+				testInputs(validator, 'required', inputs);
+				expect(validator.errors).to.be.empty;
+			});
+			
+			it('should fail on undefined and null', function() {
+				var validator = new Validator();
+				validator.is(null).required()
+					.is(undefined).required()
+					.is().required();
+				expect(validator.errors).to.have.length(3);
+			});
+		});
+		//describe('instanceof', function() {
 		describe('string', function() {
 			it('should succeed if the input is a string', function() {
 				var validator = new Validator();
@@ -508,35 +549,176 @@ describe('Validator', function() {
 				
 				expect(validator.errors).to.have.length(inputs.length);
 			});
-			it('should transform strings into numbers', function() {
+			it('should transform values into numbers', function() {
 				// NOTE: octal notation is not supported in ES5, so 040 is cast to 40, not 32
 				// This is intended behavior.
 				var inputs = [
 					"-10",
 					"0",
 					"5",
+					-16,
+					0,
+					32,
 					//"040",
 					"0xFF",
+					0xFFF,
 					"-1.6",
 					"4.536",
+					-2.6,
+					3.1415,
+					8e5,
 					"123e-2"
 				];
 				var outputs = [
 					-10,
 					0,
 					5,
+					-16,
+					0,
+					32,
 					//040,
 					0xFF,
+					0xFFF,
 					-1.6,
 					4.536,
+					-2.6,
+					3.1415,
+					8e5,
 					123e-2
 				];
 				var validator = new Validator();
 				var outs = testInputs(validator, 'number', inputs);
 
-				expect(outs).to.deep.equal(outputs);
 				expect(validator.errors).to.be.empty;
+				expect(outs).to.deep.equal(outputs);
 			});
 		});
+		describe('integer', function() {
+			it('should succeed if the input can be interpreted as an integer', function() {
+				var inputs = [
+					"-10",
+					"0",
+					"5",
+					-16,
+					0,
+					32,
+					"040",
+					"0xFF",
+					0xFFF,
+					8e5,
+				];
+				var validator = new Validator();
+				testInputs(validator, 'number', inputs);
+				
+				expect(validator.errors).to.be.empty;
+			});
+			it('should fail if the input cannot be interpreted as a integer', function() {
+				
+				var inputs = [
+					"",
+					"        ",
+					"\t\t",
+					"abcdefghijklm1234567890",
+					"xabcdefx",
+					true,
+					false,
+					"bcfed5.2",
+					"7.2acdgs",
+					undefined,
+					null,
+					NaN,
+					Infinity,
+					Number.POSITIVE_INFINITY,
+					Number.NEGATIVE_INFINITY,
+					new Date(2009,1,1),
+					new Object(), // jshint ignore:line
+					function(){},
+					"-1.6",
+					"4.536",
+					-2.6,
+					3.1415,
+					"123e-2"
+				];
+				var validator = new Validator();
+				testInputs(validator, 'integer', inputs);
+				
+				expect(validator.errors).to.have.length(inputs.length);
+			});
+			it('should transform values into integers', function() {
+				var inputs = [
+					"-10",
+					"0",
+					"5",
+					-16,
+					0,
+					32,
+					"0xFF",
+					0xFFF,
+					8e5
+				];
+				var outputs = [
+					-10,
+					0,
+					5,
+					-16,
+					0,
+					32,
+					0xFF,
+					0xFFF,
+					8e5
+				];
+				var validator = new Validator();
+				var outs = testInputs(validator, 'integer', inputs);
+
+				expect(validator.errors).to.be.empty;
+				expect(outs).to.deep.equal(outputs);
+			});
+		});
+		describe('array', function() {
+			it('should succeed if the input can be interpreted as an array', function() { 
+				var inputs = [
+					[],
+					[1, 'a', [{a: 'b'}]],
+					'[]',
+					'[1, "a", [{"a": "c"}]]'
+				];
+				var validator = new Validator();
+				testInputs(validator, 'array', inputs);
+				
+				expect(validator.errors).to.be.empty;
+			});
+			it('should fail if the input cannot be interpreted as an array', function() { 
+				var inputs = [
+					1,
+					'a',
+					{a: 'b'},
+					'{ "a": ["b"]}'
+				];
+				var validator = new Validator();
+				testInputs(validator, 'array', inputs);
+				
+				expect(validator.errors).to.have.length(inputs.length);
+			});
+			it('should transform values into arrays', function() {
+				var inputs = [
+					[],
+					[1, 'a', [{a: 'b'}]],
+					'[]',
+					'[1, "a", [{"a": "c"}]]'
+				];
+				var outputs = [
+					[],
+					[1, 'a', [{a: 'b'}]],
+					[],
+					[1, 'a', [{a: 'c'}]]
+				];
+				var validator = new Validator();
+				var outs = testInputs(validator, 'array', inputs);
+
+				expect(validator.errors).to.be.empty;
+				expect(outs).to.deep.equal(outputs);
+			});
+		});
+
 	});
 });
