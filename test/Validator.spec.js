@@ -722,3 +722,17 @@ describe('Validator', function() {
 
 	});
 });
+var input = { color: 'orange', param: { b: 'hello' }, position: {x: 10, y: 20} };
+var validator = new Validator();
+validator.is(input, 'input')
+		.property('color')
+			.string().equalTo('orange')                            // valid
+		.back()
+		.property('param').instanceOf(Error)                       // invalid
+			.property('message').string().back()                  // not executed
+		.back()
+		.property('position')
+			.property('x').number().lessThan(15).back()            // valid
+			.property('y').number().lessThan(15).back();            // valid
+
+console.log(validator.errors);
