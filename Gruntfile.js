@@ -21,12 +21,20 @@ module.exports = function (grunt) {
 				},
 				src: ['test/**/*.js']
 			},
+			lcov: {
+				options: {
+					reporter: 'mocha-lcov-reporter',
+					quiet: true,
+					captureFile: 'logs/lcov.info'
+				},
+				src: ['test/**/*.js']
+			},
 			'travis-cov': {
 				options: {
 					reporter: 'travis-cov'
 				},
 				src: ['test/**/*.js']
-			},
+			}
 		},
 
 		jsdoc: {
