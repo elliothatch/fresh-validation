@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/elliothatch/fresh-validation.svg?branch=master)](https://travis-ci.org/elliothatch/fresh-validation)
+[![Coverage Status](https://coveralls.io/repos/elliothatch/fresh-validation/badge.svg?branch=master&service=github)](https://coveralls.io/github/elliothatch/fresh-validation?branch=master)
+
 # fresh-validation
 ## chainable validation to ensure those inputs are fresh
 
@@ -16,7 +19,7 @@ batch, rather than one at a time as you fix each error.
  - [API Reference](#api)
     - [Standard Validators](#standard-validators)
  - [License](#license)
- - [Changelog](CHANGELOG.md)
+ - [Changelog](CHANGES.md)
 
 # Features
 
@@ -157,7 +160,6 @@ The validator has three "transformation modes":
  - `mutate`: Performs transformations directly on the input value. Value types
 	like number won't be mutated, while object properties are mutated.
  - `none`: Does not execute any transformation functions.
-```
 
 ## Required
 
