@@ -16,8 +16,10 @@ batch, rather than one at a time as you fix each error.
  - [Features](#features)
  - [Quick start](#quick-start)
  - [Examples](#examples)
- - [API Reference](#api)
+ - [API Reference](#api-reference)
+    - [Modifiers](#modifiers)
     - [Standard Validators](#standard-validators)
+ - [Contributing](#contributing)
  - [License](#license)
  - [Changelog](CHANGES.md)
 
@@ -52,9 +54,9 @@ var ValidatorErrors = require('fresh-validation').Errors;
 
 ```js
 var validator = new Validator();
-validator.is('elliot', 'name').string()                           // valid
-	.is(4, 'count').number().greaterThan(5)                       // invalid
-	.is(undefined, 'width').number().equalTo(2);                  // invalid
+validator.is('elliot', 'name').a.string()                           // valid
+	.is(4, 'count').a.number().greaterThan(5)                       // invalid
+	.is(undefined, 'width').a.number().equalTo(2);                  // invalid
 
 var errors = validator.errors;
 ```
@@ -77,36 +79,54 @@ var errors = validator.errors;
 ]
 ```
 
+Validator functions have a `continueOnFail` flag. This flag determines whether
+the validator should continue to run validations on the input after it fails a
+validation (until the next `is()`).
+
+For example, `string()` and `number()` have `continueOnFail` set to false, while
+`greaterThan` has it set to true. This is why
+`is(undefined, 'width').number().equalTo(2)` only produces one error.
+
 ## Modifiers
 
 ```js
 var validator = new Validator();
-validator.is('a').not.equalTo('b')                                 // valid
-	.is(6).equalTo(1).or.greaterThan(5)                            // valid
-	.is('b').number().or.string().lessThan(150).or.lessThan('b')   // valid
-	.is(100).number().or.string().lessThan(150).or.lessThan('b')   // valid
+validator.is('a').not.equalTo('b')                                   // valid
+	.is(6).equalTo(1).or.greaterThan(5)                              // valid
+	.is('a').a.number().or.string().lessThan(150).or.lessThan('b')   // valid
+	.is(100).a.number().or.string().lessThan(150).or.lessThan('b')   // valid
 ```
 
 ## Property selection
 
 ```js
-var input = { color: 'orange', param: { b: 'hello' }, position: {x: 10, y: 20} };
+var input = {
+	color: 'orange',
+	param: {
+		b: 'hello'
+	},
+	position: {
+		x: 10,
+		y: 20
+	}
+};
+
 var validator = new Validator();
 validator.is(input, 'input')
 		.property('color')
-			.string().equalTo('orange')                            // valid
+			.a.string().equalTo('orange')                        // valid
 		.back()
-		.property('param').instanceOf(Error)                       // invalid
-			.property('message').string().back()                   // not executed
+		.property('param').an.instanceOf(Error)                  // invalid
+			.property('message').a.string().back()               // not executed
 		.back()
 		.property('position')
-			.property('x').number().lessThan(15).back()            // valid
-			.property('y').number().lessThan(15).back();           // invalid
+			.property('x').a.number().lessThan(15).back()        // valid
+			.property('y').a.number().lessThan(15).back();       // invalid
 ```
 
-If a validator with `continueOnFail` set to false fails, no more validators are
-executed on that input or any child properties. Validators are still executed
- when going `back()` to valid parent properties.
+If a validation fails and has `continueOnFail` set to false, no more validations
+are executed on that input *or any child properties*. Validations resume
+execution after going `back()` to a valid parent property.
 
 In this example, `validator.errors` contains two errors:
 
@@ -146,24 +166,13 @@ var input = {
 };
 
 var validator = new Validator();
+validator.transformationMode = 'copy';   // default
 validator.is(this.input)
-	.property('numStr').number().equalTo(5.2).back()
-	.property('obj').property('a').object().deepEqualTo({b:2});
+	.property('numStr').a.number().equalTo(5.2).back()               // valid
+	.property('obj').property('a').an.object().deepEqualTo({b:2});   // valid
 
 validator.transformationOutput(); // { numStr: 5.2, obj: {a:{b:2}} }
 ```
-The validator has three "transformation modes":
- - `copy` *(default)*: Makes a deep copy of the input passed to `is()`. All
-	validations and transformations are made on the copy, leaving the original
-	input unchanged. The post-transformation value can be accessed with
-	`validator.transformationOutput()`.
- - `mutate`: Performs transformations directly on the input value. Value types
-	like number won't be mutated, while object properties are mutated.
- - `none`: Does not execute any transformation functions.
-
-## Required
-
-validator.is(undefined, 'height').not.required().number().equalTo(0)   //valid
 
 ## Custom validator
 
@@ -182,32 +191,159 @@ validator.addValidator(halfOfValidator);
 validator.is(8).halfOf(16);                                    // valid
 ```
 
-chainable validation
+See [`addValidator`](#addValidator-validator).
 
-each error is a ValidationChainError pushed to the errors array
-all is() calls will be run even if previous is() failed
-remaining validations in the is() call will only be run if the validator has 'continueOnFail' set
-type checks and notRequired have 'continueOnFail' set to false, while equalTo(), etc. is set to true
-the 'failed' flag is reset on every is()
-'failed' is also reset on back() if the error occured in the child property
-custom validation functions can be added to each validator instance, or to a specific validation (is) instance
-custom validation functions will override built-in validation functions
-validation functions must return true if the validation succeeded and false if it failed
+# API Reference
 
-validator.addValidator('isInArray', true, 'must be an element in the array',
-	function(target, param) {
-		return param.indexOf(target) !== -1;
-	});
+### `new Validator()` => `Validator`
 
-validator
- {
- 		name: string
- 		continueOnFail: boolean
- 		errorMessage: string
- 		validationFunction: function
- }
-error message interpolated strings:
-{name}: target name
-{val}: target val
-{not}: 'not' when negated, '' otherwise
-{1}...{n}: nth parameter value
+Create a new Validator.
+
+### `is(input, name)`
+
+Begin a validation chain for `input`. `name` is used in error messages.
+
+### `errors`
+
+An array of `ValidationError`.
+
+### `resetErrors()`
+
+Clear out the `errors` array.
+
+### `property(name)`
+
+Begin a validation chain on the property `name`.
+
+### `back()`
+
+Return validation to the parent object. Must not be used before `property()`.
+
+### `transformationMode`
+
+Set this to the name of a transformation mode to describe how transformations
+should process inputs passed to this validator.
+
+Valid transformation modes:
+ - `'copy'` *(default)*: Makes a deep copy of the input passed to `is()`. All
+	validations and transformations are made on the copy, leaving the original
+	input unchanged. The post-transformation value can be accessed with
+	`validator.transformationOutput()`.
+ - `'mutate'`: Performs transformations directly on the input value. Value types
+	like number won't be mutated, while objects and their properties are mutated.
+ - `'none'`: Does not execute any transformation functions.
+
+### `transformationOutput()`
+
+Get the input from the last `is()` call, after transformations have been applied.
+In modes `'mutate'` and `'none'`, this is strictly equal (`===`) to the input.
+
+### `addValidator(validator)`
+
+Add a custom validator to this `Validator` instance. To add a validator to all
+instances of `Validator`, use
+[`Validator.addGlobalValidator()`](#Validator.addGlobalValidator-validator),
+
+**NOTE: Adding a validator with the same name as an existing validator will
+overwrite the old validator.**
+
+Validator must be an object with properties:
+ - `name` *(required)*: string
+ - `continueOnFail` *(required)*: boolean
+ - `errorMessage` *(required)*: string
+ - `validationFunction` *(required)*: function(target, param1, param2, ...paramN) => boolean
+ - `transformationFunction`: function(target) => targetOut
+
+`errorMessage` supports string interpolation with the following values:
+ - `{name}`: Target name
+ - `{val}`: Target value
+ - `{not}`: The string 'not' when negated. Otherwise, the empty string
+ - `{1}...{N}`: Nth parameter value
+
+### `Validator.addGlobalValidator(validator)`
+
+Add a custom validator to all instances of `Validator`, by adding it to the
+`Validator` prototype.
+
+**NOTE: Adding a validator with the same name as an existing validator will
+overwrite the old validator.**
+
+## Modifiers
+
+### `a` and `an`
+
+Chainable properties for readability. Does nothing.
+
+### `not`
+
+Negate the next validation. Has special behavior for [`required()`](#required).
+
+### `or`
+
+Perform a logical OR with the next validation.
+
+Example:
+```js
+// valid when input === 'a' || input === 'b' || input === 'c'
+validator.is(input).equalTo('a').or.equalTo('b').or.equalTo('c');
+```
+
+## Standard Validators
+
+### `required`
+continueOnFail: false
+
+### `defined`
+continueOnFail: false
+
+### `instanceOf`
+continueOnFail: false
+
+### `object`
+continueOnFail: false
+transfomations:
+ - JSON object string -> object
+
+### `string`
+continueOnFail: false
+
+### `number`
+continueOnFail: false
+transfomations:
+ - string -> number
+
+### `integer`
+continueOnFail: false
+transfomations:
+ - string -> number
+
+### `array`
+continueOnFail: false
+transfomations:
+ - JSON array string -> array
+
+### `contains`
+continueOnFail: false
+
+### `equalTo`
+continueOnFail: true
+
+### `deepEqualTo`
+continueOnFail: true
+
+### `greaterThan`
+continueOnFail: true
+
+### `lessThan`
+continueOnFail: true
+
+# Contributing
+Add your changes to a new branch. If adding a feature, make sure to add unit tests.
+Builds will fail if code coverage is less than 90%, but in general, contributions
+should have 100% code coverage.
+
+When your branch is ready, make a pull request.
+
+# License
+MIT License
+

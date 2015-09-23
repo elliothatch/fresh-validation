@@ -1,6 +1,6 @@
 {
   "name": "fresh-validation",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "chainable validation to ensure those inputs are fresh",
   "scripts": {
     "test": "grunt test",
@@ -33,6 +33,9 @@
     "mocha-lcov-reporter": "~1.0.0",
     "sinon": "~1.15.4",
     "travis-cov": "~0.2.5"
+  },
+  "engines": {
+    "node": ">=0.10"
   },
   "config": {
     "travis-cov": {

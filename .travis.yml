@@ -1,8 +1,15 @@
 language: node_js
 node_js:
-  - "node"
-  - "0.12"
-  - "0.11"
-  - "0.10"
+- node
+- '0.12'
+- '0.11'
+- '0.10'
 before_install: npm install -g grunt-cli
 after_success: npm run coveralls
+deploy:
+  provider: npm
+  email: "elliot.hatch@gmail.com"
+  api_key:
+    secure: FzizvPLOvF4ZoN4TN9JkqVd5Y+h8PcjkR17Zr5YKl9GPXUPlMDa+61BD9MT3LBlCEwBGB+eg18HoLfyleTQGaue59eeD1a+f7M5BzimacyYe3vIG0Fucq8S0/LrpnTbfehN8RT7ql3T1dJG0PNvCgW5/CdiEXzO6arVKY81IagBBy+WUgPLrUgoQwFSjpvSUFH4RrSwK+9yu5s4InO92vlmYwXdiPK6C6kUUNxc02co9Q15CxeuRvfb5q22s7l1WY765zmSTrSwGAHdJCLiTtEWUFeTZlPC85khgNDGusdUgTcIB0grz6EMb7/yxLu28VNuisKPIb6zjXysq54upWBXY6ZXarRQ3cI8/rsIrYZVeisH//MKrNRaePTHEwofTvpd0Xmz1sUk7/oYP9Dk4wnNE6U27LnsjOmtguvfjH2GdNZEmPE3XvRnsYcfAsOPjq3HBRUuuIbbdzyFS3I5LtUVywpBnh8+3sTa8ZDfapNCU4LxNkekxDNHgufDVCr6uJ79mQSxLxBWDYNGvS7Pv2PtfTeVZS4cEVgB+wccnV7ZS3wCgeZmff0bchQ/QRUb0om49v1rUTukp90v4truQErUhdjDSeoL3K/QHwRhUd2G4yPHSxvnO5xuOBNxD4gq/g1qRzwvEf/ikCKnBryNlwT10FdK1v2fv2G5Nx4DpDsA=
+  on:
+      tags: true
