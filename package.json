@@ -1,11 +1,12 @@
 {
   "name": "fresh-validation",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "chainable validation to ensure those inputs are fresh",
   "scripts": {
     "test": "grunt test",
     "coveralls": "cat logs/lcov.info | ./node_modules/.bin/coveralls"
   },
+  "main": "lib/",
   "repository": {
     "type": "git",
     "url": "http://github.com/elliothatch/fresh-validation.git"

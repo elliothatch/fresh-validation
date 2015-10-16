@@ -7,7 +7,7 @@
 # Introduction
 
 fresh-validation is an input validation library that supports custom validators
-and data transformations with a simple chainable interface.  
+and data transformations with a simple chainable interface.
 
 Validation code doesn't exit early, so you get all your validation errors in one
 batch, rather than one at a time as you fix each error.
@@ -29,8 +29,8 @@ batch, rather than one at a time as you fix each error.
  - Input transformations
  - Chainable interface
  - Common validators
- - Custom validator support
- - Error message string interpolation
+ - Custom validator/transformer support
+ - Input whitelisting
 
 <hr>
 
@@ -167,13 +167,37 @@ var input = {
 
 var validator = new Validator();
 validator.transformationMode = 'copy';   // default
-validator.is(this.input)
+validator.is(input)
 	.property('numStr').a.number().equalTo(5.2).back()               // valid
 	.property('obj').property('a').an.object().deepEqualTo({b:2});   // valid
 
 validator.transformationOutput(); // { numStr: 5.2, obj: {a:{b:2}} }
 ```
 
+## Whitelist
+
+Use `whitelist()` to automatically strip properties off an object that weren't
+explicitly validated.
+
+```js
+var input = {
+	num: 1,
+	obj: {
+		numA: 2,
+		badA: 3
+	},
+	badB: 4
+};
+
+var validator = new Validator();
+validator.is(input)
+	.property('num').a.number().equalTo(1).back()     // invalid
+	.property('obj')
+		.property('numA').a.number().equalTo(2)       // invalid
+
+validator.whitelist();
+validator.transformationOutput(); // { num: 1, obj: {numA:2} }
+```
 ## Custom validator
 
 ```js
@@ -211,6 +235,17 @@ An array of `ValidationError`.
 
 Clear out the `errors` array.
 
+### `throwErrors()`
+
+Combines all errors into one 'compound error', clears the `errors` array, then
+throws the compound error.
+
+Errors created with this function are an instance of `ValidationError`. The
+`message` property is a concatenation of all individual error messages,
+`target`, `targetName`, and `parameters` are arrays containing the corresponding
+values from each individual error. Additionally, the `compoundError` property is
+set to true.
+
 ### `property(name)`
 
 Begin a validation chain on the property `name`.
@@ -237,6 +272,16 @@ Valid transformation modes:
 
 Get the input from the last `is()` call, after transformations have been applied.
 In modes `'mutate'` and `'none'`, this is strictly equal (`===`) to the input.
+
+### `whitelist()`
+
+If the input was an object, delete every property off the transformation output
+that was not explicitly validated with `property()`.
+
+**WARNING: Whitelisted properties are tracked when they are validated through
+`property()` calls. Manually validating nested objects with `equalTo()` or
+`deepEqualTo()` will not track their properties, and may result in unwanted
+deletions.**
 
 ### `addValidator(validator)`
 

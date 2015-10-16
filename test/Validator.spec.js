@@ -390,6 +390,65 @@ describe('Validator', function() {
 			var output = validator.transformationOutput();
 			expect(output).to.deep.equal({ numStr: '5.2', obj: {a:'{"b":2}'} });
 		});
+
+		describe('whitelist', function() {
+			beforeEach(function() {
+				this.input.badStr = 'abc';
+				this.input.badObj = { c: 1, d: 'a' };
+				this.input.obj.badProp = 5;
+				this.input.obj.a = '{"b":2,"badProp":3}';
+			});
+
+			it('should remove all object properties that were not validated from the copy in copy mode', function() {
+				var validator = new Validator();
+				validator.transformationMode = 'copy';
+				validator.is(this.input)
+					.property('numStr').number().equalTo(5.2).back()
+					.property('obj').property('a').object()
+						.property('b').number().equalTo(2);
+
+				expect(validator.errors).to.be.empty;
+				validator.whitelist();
+				var output = validator.transformationOutput();
+				expect(output).to.not.equal(this.input);
+				expect(output).to.deep.equal({ numStr: 5.2, obj: {a:{b:2}} });
+			});
+
+			it('should remove all object properties that were not validated from the original in mutate mode', function() {
+				var validator = new Validator();
+				validator.transformationMode = 'mutate';
+				validator.is(this.input)
+				.property('numStr').number().equalTo(5.2).back()
+				.property('obj').property('a').object()
+						.property('b').number().equalTo(2);
+
+				expect(validator.errors).to.be.empty;
+				validator.whitelist();
+				var output = validator.transformationOutput();
+				expect(output).to.equal(this.input);
+				expect(this.input).to.deep.equal({ numStr: 5.2, obj: {a:{b:2}} });
+			});
+		});
+	});
+
+	describe('throwErrors', function() {
+		it('should combine all errors into one, clear errors, then throw the error', function() {
+			var validator = new Validator();
+			 validator.is(1, 'first').equalTo(2)
+				.is('a', 'second').equalTo('b');
+
+			expect(validator.errors).to.have.length(2);
+			try {
+				validator.throwErrors();
+				expect(false).to.be.true; //FAIL
+			}
+			catch(err) {
+				expect(err.targetName).to.deep.equal(['first', 'second']);
+				expect(err.targetValue).to.deep.equal([1, 'a']);
+				expect(err.parameters).to.deep.equal([[2],['b']]);
+				expect(validator.errors).to.be.empty;
+			}
+		});
 	});
 	describe('errors', function() {
 		describe('InvalidValidatorError', function() {
@@ -409,7 +468,7 @@ describe('Validator', function() {
 			});
 		});
 	});
-	
+
 	describe('addValidator', function() {
 		beforeEach(function() {
 			this.halfOfValidator = {
