@@ -1,6 +1,6 @@
 {
   "name": "fresh-validation",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "chainable validation to ensure those inputs are fresh",
   "scripts": {
     "test": "grunt test",

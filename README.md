@@ -19,6 +19,7 @@ batch, rather than one at a time as you fix each error.
  - [API Reference](#api-reference)
     - [Modifiers](#modifiers)
     - [Standard Validators](#standard-validators)
+ - [Known Issues](#known-issues)
  - [Contributing](#contributing)
  - [License](#license)
  - [Changelog](CHANGES.md)
@@ -59,6 +60,7 @@ validator.is('elliot', 'name').a.string()                           // valid
 	.is(undefined, 'width').a.number().equalTo(2);                  // invalid
 
 var errors = validator.errors;
+validator.endValidation();      //reset errors array
 ```
 
 `errors` is an array of `ValidationError` objects:
@@ -174,17 +176,26 @@ validator.is(input)
 validator.transformationOutput(); // { numStr: 5.2, obj: {a:{b:2}} }
 ```
 
+In copy mode, if the input to successive `is()` calls is strictly equal (===)
+to the previous input, the transformations from the previous validations are
+remembered.
+
 ## Whitelist
 
 Use `whitelist()` to automatically strip properties off an object that weren't
-explicitly validated.
+explicitly validated. Any properties selected with `property()` are
+automatically whitelisted, but additional properties can be whitelisted by
+passing an object to `whitelist()`.
 
 ```js
 var input = {
 	num: 1,
 	obj: {
 		numA: 2,
-		badA: 3
+		badA: 3,,
+		objB: {
+			numB: 4
+		}
 	},
 	badB: 4
 };
@@ -195,9 +206,14 @@ validator.is(input)
 	.property('obj')
 		.property('numA').a.number().equalTo(2)       // invalid
 
-validator.whitelist();
+var additionalWhitelist = { obj: { objB: true } };
+validator.whitelist(additionalWhitelist); // strip unwanted properties
 validator.transformationOutput(); // { num: 1, obj: {numA:2} }
 ```
+
+If the input to successive `is()` calls is strictly equal (===) to the previous
+input, the whitelisted properties from the previous validations are remembered.
+
 ## Custom validator
 
 ```js
@@ -231,9 +247,10 @@ Begin a validation chain for `input`. `name` is used in error messages.
 
 An array of `ValidationError`.
 
-### `resetErrors()`
+### `endValidation()`
 
-Clear out the `errors` array.
+Clear out the `errors` array, and manually forget transformations and
+whitelisted properties.
 
 ### `throwErrors()`
 
@@ -273,10 +290,40 @@ Valid transformation modes:
 Get the input from the last `is()` call, after transformations have been applied.
 In modes `'mutate'` and `'none'`, this is strictly equal (`===`) to the input.
 
-### `whitelist()`
+### `whitelist(allowedKeys)`
 
 If the input was an object, delete every property off the transformation output
 that was not explicitly validated with `property()`.
+
+`allowedKeys` is an optional parameter for specifying explicit whitelisting on
+specific properties. Adding the property to `allowedKeys` with the value `true`
+will whitelist all properties on the object and any nested objects. Giving a
+`false` value only whitelists that property, but not any nested properties.
+
+`allowedKeys` has a nested structure that matches the object it is whitelisting.
+
+```js
+var input = {
+	a: {
+		good: {
+			goodA: 1,
+			goodB: 2
+		},
+		bad: {
+			badA: 1
+		}
+	},
+	goodTwo: {
+		badA: 1
+	}
+};
+var allowedKeys = {
+	a: {
+		good: true
+	},
+	goodTwo: false
+};
+```
 
 **WARNING: Whitelisted properties are tracked when they are validated through
 `property()` calls. Manually validating nested objects with `equalTo()` or
@@ -368,7 +415,10 @@ transfomations:
  - JSON array string -> array
 
 ### `contains`
-continueOnFail: false
+continueOnFail: true
+
+### `elementOf`
+continueOnFail: true
 
 ### `equalTo`
 continueOnFail: true
@@ -381,6 +431,10 @@ continueOnFail: true
 
 ### `lessThan`
 continueOnFail: true
+
+# Known Issues
+
+ - string validation fails on `new String()` objects, because of the way objects are copied
 
 # Contributing
 Add your changes to a new branch. If adding a feature, make sure to add unit tests.
