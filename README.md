@@ -60,7 +60,7 @@ validator.is('elliot', 'name').a.string()                           // valid
 	.is(undefined, 'width').a.number().equalTo(2);                  // invalid
 
 var errors = validator.errors;
-validator.endValidation();      //reset errors array
+validator.resetErrors();      //reset errors array
 ```
 
 `errors` is an array of `ValidationError` objects:
@@ -176,10 +176,6 @@ validator.is(input)
 validator.transformationOutput(); // { numStr: 5.2, obj: {a:{b:2}} }
 ```
 
-In copy mode, if the input to successive `is()` calls is strictly equal (===)
-to the previous input, the transformations from the previous validations are
-remembered.
-
 ## Whitelist
 
 Use `whitelist()` to automatically strip properties off an object that weren't
@@ -210,9 +206,6 @@ var additionalWhitelist = { obj: { objB: true } };
 validator.whitelist(additionalWhitelist); // strip unwanted properties
 validator.transformationOutput(); // { num: 1, obj: {numA:2} }
 ```
-
-If the input to successive `is()` calls is strictly equal (===) to the previous
-input, the whitelisted properties from the previous validations are remembered.
 
 ## Custom validator
 
@@ -247,10 +240,9 @@ Begin a validation chain for `input`. `name` is used in error messages.
 
 An array of `ValidationError`.
 
-### `endValidation()`
+### `resetErrors()`
 
-Clear out the `errors` array, and manually forget transformations and
-whitelisted properties.
+Clear out the `errors` array.
 
 ### `throwErrors()`
 

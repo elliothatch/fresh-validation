@@ -430,20 +430,6 @@ describe('Validator', function() {
 				expect(output).to.equal(this.input);
 				expect(this.input).to.deep.equal({ numStr: 5.2, allowedZ: {z: 'Z'}, obj: {a:{b:2,allowedProp:4},allowedProp:9 }});
 			});
-
-			it('should remember whitelisted properties from the last \'is\' if it was the same object', function() {
-				var validator = new Validator();
-				validator.transformationMode = 'copy';
-				validator.is(this.input).property('numStr').number().equalTo(5.2);
-				validator.is(this.input).property('obj').property('a').object()
-						.property('b').number().equalTo(2);
-
-				expect(validator.errors).to.be.empty;
-				validator.whitelist({allowedZ: true, obj: {allowedProp: true, a: {allowedProp: true }}});
-				var output = validator.transformationOutput();
-				expect(output).to.not.equal(this.input);
-				expect(output).to.deep.equal({ numStr: 5.2, allowedZ: {z: 'Z'}, obj: {a:{b:2,allowedProp:4},allowedProp:9 }});
-			});
 		});
 	});
 
@@ -563,7 +549,6 @@ describe('Validator', function() {
 				validator.is('a').string();
 					//deep copying String class doesn' work...
 					//.is(new String('b')).string(); // jshint ignore:line
-			console.log(validator.errors);
 				expect(validator.errors).to.be.empty;
 			});
 			it('should fail if the input is not a string', function() {
