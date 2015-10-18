@@ -2,7 +2,12 @@
 
 ## 0.2
 
-### 0.2.1 - 10-17-2015
+### 0.2.2 - 10-18-2015
+
+ - fix:
+    - republish to try and fix npm "shasum check failed" issue
+
+### 0.2.1 - 10-18-2015
  - add:
     - `elementOf` standard validator
     - `whitelist` now accepts an object parameter to specify properties that
