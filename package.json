@@ -1,6 +1,6 @@
 {
     "name": "fresh-validation",
-    "version": "0.3.0",
+    "version": "3.0.0",
     "description": "keeps your data fresh",
     "main": "build/index.js",
     "types": "declarations/index.d.ts",
