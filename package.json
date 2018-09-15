@@ -1,46 +1,45 @@
 {
-  "name": "fresh-validation",
-  "version": "0.2.1",
-  "description": "chainable validation to ensure those inputs are fresh",
-  "scripts": {
-    "test": "grunt test",
-    "coveralls": "cat logs/lcov.info | ./node_modules/.bin/coveralls"
-  },
-  "main": "lib/",
-  "repository": {
-    "type": "git",
-    "url": "http://github.com/elliothatch/fresh-validation.git"
-  },
-  "keywords": [
-    "validate",
-    "validator",
-    "validation"
-  ],
-  "author": "Elliot Hatch",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/elliothatch/fresh-validation/issues"
-  },
-  "homepage": "https://github.com/elliothatch/fresh-validation",
-  "devDependencies": {
-    "blanket": "~1.1.7",
-    "chai": "~3.0.0",
-    "coveralls": "~2.11.4",
-    "grunt": "~0.4.5",
-    "grunt-contrib-jshint": "~0.11.2",
-    "grunt-jsdoc": "~0.6.7",
-    "grunt-mocha-test": "~0.12.7",
-    "mocha": "~2.2.5",
-    "mocha-lcov-reporter": "~1.0.0",
-    "sinon": "~1.15.4",
-    "travis-cov": "~0.2.5"
-  },
-  "engines": {
-    "node": ">=0.10"
-  },
-  "config": {
-    "travis-cov": {
-      "threshold": 90
+    "name": "fresh-validation",
+    "version": "0.3.0",
+    "description": "keeps your data fresh",
+    "main": "build/index.js",
+    "types": "declarations/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "clean": "node scripts/clean.js",
+        "docs": "typedoc --out docs/ src/",
+        "test": "jest"
+    },
+    "author": {
+        "name": "Elliot Hatch",
+        "email": "elliot.hatch@gmail.com"
+    },
+    "license": "MIT",
+    "devDependencies": {
+        "@types/jest": "^23.3.2",
+        "@types/json-stringify-safe": "^5.0.0",
+        "fs-extra": "^7.0.0",
+        "gulp": "^3.9.1",
+        "jest": "^23.6.0",
+        "ts-jest": "^23.1.4",
+        "typedoc": "^0.12.0",
+        "typescript": "^3.0.3"
+    },
+    "dependencies": {
+        "reflect-metadata": "^0.1.12"
+    },
+    "jest": {
+        "transform": {
+            "^.+\\.tsx?$": "ts-jest"
+        },
+        "testRegex": "(/test/.*|(\\.|/)(test|spec))\\.(tsx?|ts?)$",
+        "moduleFileExtensions": [
+            "ts",
+            "tsx",
+            "js",
+            "jsx",
+            "json",
+            "node"
+        ]
     }
-  }
 }
