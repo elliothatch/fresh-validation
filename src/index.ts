@@ -84,7 +84,7 @@ export function validate(options?: Partial<TypeInfo> | boolean, arrayType?: Cons
  * @param data - The value to validate
  * @param expected - the expected type, or a TypeInfo object with the expected type and extra type information
  * @param variableName - name used in TypeError messages
- * @return - The data parameter that succeeded validation, cast to the expected type
+ * @return - A deep copy of the data with only whitelisted (@validate) properties. cast to the expected type (note: not initialized with new, instaceof won't work)
  */
 export function validateData<T, C extends Constructor<T>>(data: any, expected: C | TypeInfo, variableName: string): T {
     // if expected is missing typeConstructor, is must be of  type C--create a TypeInfo based on it
@@ -125,12 +125,14 @@ export function validateData<T, C extends Constructor<T>>(data: any, expected: C
                         `array of 'any' is not currently supported).`);
                 }
 
-                data.forEach((element: any, i: number) => {
-                    validateData(element, {
+                return data.map((element: any, i: number) => validateData(
+                    element,
+                    {
                         typeConstructor: expectedTypeData.arrayType!,
                         optional: expectedTypeData.arrayOptional
-                    },           `${variableName}[${i}]`);
-                });
+                    },
+                    `${variableName}[${i}]`)
+                );
             } else {
                 let propertyTypeMap: Map<string, TypeInfo> = expectedTypeData.typeConstructor.prototype[validateProps];
                 if (!propertyTypeMap) {
